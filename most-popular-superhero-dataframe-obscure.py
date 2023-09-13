@@ -17,9 +17,9 @@ lines = spark.read.text("Marvel-Graph")
 connections = lines.withColumn("id", func.split(func.trim(func.col("value")), " ")[0]) \
     .withColumn("connections", func.size(func.split(func.trim(func.col("value")), " ")) - 1) \
     .groupBy("id").agg(func.sum("connections").alias("connections"))
-    
-obscure =  connections.sort(func.col("connections").asc()).first()
 
-obscureName = names.filter(func.col("id") == obscure[0]).select("name").first()
+minConn = connections.agg(func.min("connections")).first()[0]
 
-print(f"Most obscure hero is {obscureName[0]} with only {obscure[1]} co-appereance")
+obscureOneConn =  connections.filter(func.col("connections") == minConn)
+obscureJoinName = obscureOneConn.join(names,"id").select(func.col("name"))
+obscureJoinName.show()
